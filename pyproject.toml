@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "automate-crypto"
+version = "0.1.0"
+description = "Simple script to automate crypto purchases and withdrawals to your own wallet."
+authors = ["Simon Stoeferle <simon.stoeferle@gmx.de>"]
+
+[tool.poetry.scripts]
+automate-crypto = "automate_crypto.main:main"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pykrakenapi = "^0.2.2"
+python-dotenv = "^0.19.2"
+toml = "^0.10.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^21.11b1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
