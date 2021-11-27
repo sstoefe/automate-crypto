@@ -1,6 +1,7 @@
 import os
 import krakenex
 import logging
+import pandas as pd
 
 from decimal import Decimal
 from pykrakenapi import KrakenAPI
@@ -75,3 +76,54 @@ def buy_crypto(pair: str, ordertype: str, amount: str, oflags: str, validate: bo
         order = response["descr"]["order"]
         txid = f", txid={response['txid']}" if "txid" in response else ""
         logging.info(f"{order}{txid}")
+
+
+def withdraw_crypto(
+    asset: str,
+    amount: str,
+    max_fee: str,
+    key: str,
+    validate: bool,
+):
+    """Supports crypto withdrawals to a withdrawal wallet on the kraken crypto exchange.
+
+    Args:
+        asset (str): crypto asset, e.g. XBT, ETH, etc.
+        amount (str): amount of crypto to withdraw
+        max_fee (str): max fee to pay (in %)
+        key (str): withdrawal address (needs to be setup in the kraken account)
+        validate (bool): if true no withdrawal is triggered
+    """
+    q = setup_decimal(prec=16, decimal_prec="1.00000000")
+    kraken = krakenapi()
+
+    # withdrawal_information = kraken.get_withdrawal_information(key=key, asset=asset, amount=float(amount))
+    result = {
+        "method": "Bitcoin",
+        "limit": "0.00700",
+        "amount": "0.00685",
+        "fee": "0.00015000",
+    }
+    withdrawal_info = pd.DataFrame(index=[asset], data=result).T
+    withdraw_fee = qDecimal(withdrawal_info[asset]["fee"], q)
+    if not amount:
+        amount = withdrawal_info[asset]["limit"]
+    amount = qDecimal(amount, q)
+    withdraw_amount = qDecimal(amount - withdraw_fee, q)
+    max_fee = qDecimal(max_fee, q)
+    fee_to_pay = qDecimal(withdraw_fee / amount * 100, q)
+
+    if not validate:
+        if fee_to_pay <= max_fee:
+            # refid = kraken.withdraw_funds(key=key, asset=asset, amount=float(amount))
+            refid = "AGBSO6T-UFMTTQ-I7KGS6"
+            logging.info(
+                f"fee={fee_to_pay}% <= max_fee={max_fee}%: withdraw {withdraw_amount} {asset} to '{key}', refid={refid}"
+            )
+        else:
+            logging.warning(
+                f"fee={fee_to_pay}% > max_fee={max_fee}%: no withdrawal was triggered."
+            )
+    else:
+        print(f"withdraw will get triggered: {fee_to_pay <= max_fee}")
+        print(f"{fee_to_pay=}, {max_fee=}")
