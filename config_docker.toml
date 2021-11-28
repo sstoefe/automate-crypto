@@ -1,0 +1,3 @@
+[automate-crypto]
+logging_path="/log/automate_crypto.log"
+env_file="/app/.env"
