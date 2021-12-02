@@ -5,7 +5,7 @@ import toml
 from dotenv import load_dotenv
 from pathlib import Path
 
-from automate_crypto.kraken.kraken import buy_crypto, withdraw_crypto
+from automate_crypto.kraken.kraken import Kraken
 
 
 KRAKEN = "kraken"
@@ -68,16 +68,32 @@ def main():
         default="limit",
     )
     kraken_buy.add_argument(
+        "--limit-price",
+        type=str,
+        help="the limit price for orders with ordertype 'limit'",
+        required=False,
+        default=None,
+    )
+    kraken_buy.add_argument(
+        "--limit-percentage",
+        type=str,
+        help="the limit percentage of the current bid price",
+        required=False,
+        default=None,
+    )
+    kraken_buy.add_argument(
         "--amount",
         type=str,
         help="amount of fiat money you want to spend",
         required=True,
     )
     kraken_buy.add_argument(
-        "--oflags",
+        "--fee-currency",
         type=str,
-        help="comma delimited list of order flags: 'post', 'fcib', 'fciq', 'nompp'",
-        default="fciq",
+        choices=["crypto", "fiat"],
+        help="",
+        required=False,
+        default="fiat",
     )
     kraken_buy.add_argument(
         "--validate",
@@ -97,9 +113,10 @@ def main():
         type=str,
         help="amount of crypto you want to withdraw",
         required=False,
+        default=0.0,
     )
     kraken_withdraw.add_argument(
-        "--key",
+        "--withdrawal-key",
         type=str,
         help="withdrawal key name, as set up on your kraken account",
         required=True,
@@ -119,20 +136,23 @@ def main():
     args = parser.parse_args()
 
     if args.exchange == KRAKEN:
+        kraken = Kraken()
         if args.action == BUY:
-            buy_crypto(
+            kraken.buy_crypto(
                 pair=args.pair,
                 ordertype=args.ordertype,
-                amount=args.amount,
-                oflags=args.oflags,
+                limit_price=args.limit_price,
+                limit_percentage=args.limit_percentage,
+                fiat_amount=args.amount,
+                fee_currency=args.fee_currency,
                 validate=args.validate,
             )
         elif args.action == WITHDRAW:
-            withdraw_crypto(
+            kraken.withdraw_crypto(
                 asset=args.asset,
                 amount=args.amount,
                 max_fee=args.max_fee,
-                key=args.key,
+                withdrawal_key=args.withdrawal_key,
                 validate=args.validate,
             )
         else:
